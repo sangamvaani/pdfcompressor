@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Compressor</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
+    <!-- pdf-lib & pdf.js -->
+    <script src="https://unpkg.com/pdf-lib@1.4.0"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+    </script>
+</head>
+<body class="bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen flex flex-col transition-colors duration-300 selection:bg-teal-500 selection:text-white relative overflow-x-hidden">
+
+    <!-- Background Subtle Glow Orbs -->
+    <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-teal-500/10 dark:bg-teal-500/10 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-cyan-500/10 dark:bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+    <!-- Navbar with Glassmorphism -->
+    <header class="w-full border-b border-slate-200/80 dark:border-slate-800/80 bg-white/70 dark:bg-slate-900/60 backdrop-blur-xl sticky top-0 z-40 px-6 py-4 flex justify-between items-center transition-colors duration-300">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-teal-600 to-cyan-600 flex items-center justify-center text-white shadow-lg shadow-teal-600/25">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"/>
+                </svg>
+            </div>
+            <div>
+                <span class="font-bold text-base tracking-tight text-slate-900 dark:text-white block leading-none">PDF Compressor</span>
+                <span class="text-[10px] text-slate-500 dark:text-slate-400 font-medium tracking-wider uppercase">Local Client Utility</span>
+            </div>
+        </div>
+        <div class="flex items-center gap-3">
+            <div class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-teal-500/10 border border-teal-500/20 text-teal-700 dark:text-teal-400 text-xs font-semibold">
+                <span class="w-2 h-2 rounded-full bg-teal-500 animate-pulse"></span> 100% Private
+            </div>
+            <button onclick="toggleTheme()" class="w-10 h-10 rounded-xl bg-white/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:text-teal-600 dark:hover:text-teal-400 transition duration-200 flex items-center justify-center text-sm cursor-pointer shadow-sm">
+                <span id="themeIcon">☀️</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="flex-1 max-w-4xl w-full mx-auto p-4 sm:p-8 flex flex-col justify-center items-center my-auto z-10">
+        
+        <!-- Hero Section -->
+        <div class="text-center mb-8 max-w-lg">
+            <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-2">Fast PDF Compression</h1>
+            <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-400">Optimize documents instantly right inside your browser with complete privacy and zero cloud uploads.</p>
+        </div>
+
+        <!-- Professional Glassmorphism Workspace Card -->
+        <div class="w-full bg-white/70 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800/80 backdrop-blur-2xl rounded-3xl shadow-2xl p-6 sm:p-8 transition-all relative">
+            
+            <!-- Step 1: Upload Zone -->
+            <div id="uploadSection">
+                <label for="pdfFile" class="flex flex-col items-center justify-center border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-teal-500 dark:hover:border-teal-400 rounded-2xl p-12 cursor-pointer bg-white/50 dark:bg-slate-950/40 transition group">
+                    <div class="w-16 h-16 rounded-2xl bg-teal-500/10 text-teal-600 dark:text-teal-400 flex items-center justify-center mb-4 group-hover:scale-110 transition duration-300 shadow-inner border border-teal-500/20">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                        </svg>
+                    </div>
+                    <span class="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1">Drop your PDF here, or <span class="text-teal-600 dark:text-teal-400 underline">browse</span></span>
+                    <span class="text-[11px] text-slate-500 dark:text-slate-400">Supports standard PDF documents</span>
+                    <input type="file" id="pdfFile" accept="application/pdf" onchange="handleFileSelect()" class="hidden">
+                </label>
+            </div>
+
+            <!-- Step 2: Editor & Settings -->
+            <div id="editorSection" class="hidden grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                
+                <!-- File Info Card -->
+                <div class="bg-white/60 dark:bg-slate-950/40 border border-slate-200/80 dark:border-slate-800/80 rounded-2xl p-5 flex flex-col justify-between h-full backdrop-blur-md">
+                    <div>
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="text-[11px] font-semibold uppercase tracking-wider text-teal-700 dark:text-teal-400 bg-teal-500/10 px-3 py-1 rounded-full border border-teal-500/20">Ready</span>
+                            <button onclick="resetApp()" class="text-xs text-red-500 hover:text-red-600 font-semibold cursor-pointer transition">Remove</button>
+                        </div>
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-10 h-10 rounded-xl bg-red-500/10 text-red-500 flex items-center justify-center font-bold text-xs border border-red-500/20">PDF</div>
+                            <div class="overflow-hidden">
+                                <h3 id="fileName" class="text-sm font-semibold text-slate-900 dark:text-white truncate">filename.pdf</h3>
+                                <p class="text-xs text-slate-500 dark:text-slate-400" id="filePages">-- pages</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="pt-4 border-t border-slate-200/80 dark:border-slate-800/80 flex justify-between text-xs text-slate-600 dark:text-slate-400">
+                        <span>Original Size:</span>
+                        <strong id="originalSize" class="text-slate-900 dark:text-slate-200">--</strong>
+                    </div>
+                </div>
+
+                <!-- Compression Controls -->
+                <div class="flex flex-col justify-between h-full space-y-5">
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">Compression Quality</label>
+                            <span id="qualityVal" class="text-sm font-bold text-teal-600 dark:text-teal-400">95%</span>
+                        </div>
+                        <input type="range" id="qualitySlider" min="60" max="100" value="95" oninput="updateEstimate()" class="w-full accent-teal-600 dark:accent-teal-500 cursor-pointer bg-slate-200 dark:bg-slate-800 rounded-lg h-2 mb-3">
+                        
+                        <div class="flex justify-between items-center text-xs text-slate-600 dark:text-slate-400 bg-white/60 dark:bg-slate-950/40 p-3 rounded-xl border border-slate-200/80 dark:border-slate-800/80 backdrop-blur-md">
+                            <span>Expected Size:</span>
+                            <div class="flex items-center gap-2">
+                                <strong id="expectedSize" class="text-teal-600 dark:text-teal-400">--</strong>
+                                <span id="savingBadge" class="text-[10px] bg-teal-500/10 text-teal-700 dark:text-teal-400 px-1.5 py-0.5 rounded font-medium">--</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Button -->
+                    <button id="compressBtn" onclick="compressPDF()" class="w-full bg-teal-600 hover:bg-teal-500 active:scale-[0.98] text-white font-semibold py-3 px-4 rounded-xl transition duration-200 cursor-pointer shadow-lg shadow-teal-600/25 text-sm">
+                        Compress PDF Now
+                    </button>
+                </div>
+
+            </div>
+
+            <!-- Step 3: Progress & Results -->
+            <div id="statusArea" class="mt-6 hidden pt-6 border-t border-slate-200/80 dark:border-slate-800/80">
+                <div class="flex justify-between items-center mb-2">
+                    <span id="statusText" class="text-xs font-semibold text-slate-700 dark:text-slate-300">Processing...</span>
+                    <span id="progressPercent" class="text-xs font-bold text-teal-600 dark:text-teal-400">0%</span>
+                </div>
+                <!-- Progress Bar -->
+                <div class="w-full bg-slate-200 dark:bg-slate-800 rounded-full h-2.5 overflow-hidden mb-5">
+                    <div id="progressBar" class="bg-gradient-to-r from-teal-600 to-cyan-600 h-2.5 rounded-full transition-all duration-200" style="width: 0%"></div>
+                </div>
+                
+                <div class="flex gap-4">
+                    <a id="downloadLink" onclick="triggerDownloadSuccess()" class="hidden flex-1 inline-flex items-center justify-center bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-3 px-4 rounded-xl text-sm transition duration-200 shadow-lg shadow-emerald-600/25 cursor-pointer">
+                        Download Compressed PDF
+                    </a>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Download Successful Modal Popup -->
+    <div id="successModal" class="fixed inset-0 bg-slate-950/70 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl max-w-sm w-full p-6 sm:p-7 relative transform transition-all scale-95 opacity-0 duration-300 backdrop-blur-xl" id="modalContent">
+            
+            <!-- Cross Close Button -->
+            <button onclick="closeSuccessModal()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:text-slate-800 dark:hover:text-white transition cursor-pointer">
+                ✕
+            </button>
+
+            <!-- Success Header -->
+            <div class="text-center mb-5">
+                <div class="w-14 h-14 rounded-2xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center mx-auto mb-3 border border-emerald-500/20 shadow-inner">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+                    </svg>
+                </div>
+                <h2 class="text-lg font-bold text-slate-900 dark:text-white">Download Successful!</h2>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Your optimized PDF has been saved.</p>
+            </div>
+
+            <!-- Stats Box -->
+            <div class="bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 rounded-2xl p-3.5 mb-5 space-y-2.5 text-xs">
+                <div class="flex justify-between items-center">
+                    <span class="text-slate-500 dark:text-slate-400">Original Size:</span>
+                    <strong id="modalOriginalSize" class="text-slate-800 dark:text-slate-200">--</strong>
+                </div>
+                <div class="flex justify-between items-center pt-2 border-t border-slate-200 dark:border-slate-800">
+                    <span class="text-slate-500 dark:text-slate-400">Compressed Size:</span>
+                    <strong id="modalFinalSize" class="text-emerald-600 dark:text-emerald-400 font-bold">--</strong>
+                </div>
+            </div>
+
+            <!-- Modal Action Button -->
+            <button onclick="compressAnother()" class="w-full bg-teal-600 hover:bg-teal-500 text-white font-semibold py-3 px-4 rounded-xl text-xs transition duration-200 shadow-lg shadow-teal-600/25 cursor-pointer">
+                Compress Another File
+            </button>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="w-full py-6 text-center text-xs text-slate-600 dark:text-slate-400 border-t border-slate-200/80 dark:border-slate-800/80 mt-auto bg-white/50 dark:bg-slate-900/40 backdrop-blur-md transition-colors duration-300">
+        Made by <a href="https://www.linkedin.com/in/ravi-prakash-in/" target="_blank" class="text-teal-600 dark:text-teal-400 font-semibold hover:underline">Ravi</a>
+    </footer>
+
+    <!-- Script Section -->
+    <script>
+        let currentFile = null;
+        let pdfDocPdfjs = null;
+        let compressedBlobUrl = null;
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            const themeIcon = document.getElementById('themeIcon');
+
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                html.classList.add('light');
+                themeIcon.textContent = '🌙';
+            } else {
+                html.classList.remove('light');
+                html.classList.add('dark');
+                themeIcon.textContent = '☀️';
+            }
+        }
+
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        async function handleFileSelect() {
+            const fileInput = document.getElementById('pdfFile');
+            if (fileInput.files.length > 0) {
+                currentFile = fileInput.files[0];
+                
+                try {
+                    const arrayBuffer = await currentFile.arrayBuffer();
+                    const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+                    pdfDocPdfjs = await loadingTask.promise;
+
+                    document.getElementById('fileName').textContent = currentFile.name;
+                    document.getElementById('filePages').textContent = `${pdfDocPdfjs.numPages} page(s)`;
+                    document.getElementById('originalSize').textContent = formatBytes(currentFile.size);
+
+                    document.getElementById('uploadSection').classList.add('hidden');
+                    document.getElementById('editorSection').classList.remove('hidden');
+                    document.getElementById('statusArea').classList.add('hidden');
+
+                    updateEstimate();
+                } catch (err) {
+                    alert('Invalid or corrupted PDF file.');
+                }
+            }
+        }
+
+        function resetApp() {
+            currentFile = null;
+            pdfDocPdfjs = null;
+            compressedBlobUrl = null;
+            document.getElementById('pdfFile').value = '';
+            document.getElementById('uploadSection').classList.remove('hidden');
+            document.getElementById('editorSection').classList.add('hidden');
+            document.getElementById('statusArea').classList.add('hidden');
+        }
+
+        function updateEstimate() {
+            const sliderVal = document.getElementById('qualitySlider').value;
+            document.getElementById('qualityVal').textContent = sliderVal + '%';
+
+            if (currentFile) {
+                const scale = 0.6 + ((sliderVal - 60) / 40) * 0.4;
+                const quality = 0.5 + ((sliderVal - 60) / 40) * 0.5;
+                const estimatedBytes = currentFile.size * (scale * scale * 0.5 + quality * 0.4);
+                const finalEstimated = Math.min(estimatedBytes, currentFile.size);
+                
+                document.getElementById('expectedSize').textContent = formatBytes(finalEstimated);
+                
+                const savingPercent = Math.max(0, Math.round((1 - (finalEstimated / currentFile.size)) * 100));
+                document.getElementById('savingBadge').textContent = `~${savingPercent}% smaller`;
+            }
+        }
+
+        async function compressPDF() {
+            if (!currentFile || !pdfDocPdfjs) return;
+
+            const sliderVal = document.getElementById('qualitySlider').value;
+            const statusArea = document.getElementById('statusArea');
+            const statusText = document.getElementById('statusText');
+            const progressPercent = document.getElementById('progressPercent');
+            const progressBar = document.getElementById('progressBar');
+            const downloadLink = document.getElementById('downloadLink');
+            const compressBtn = document.getElementById('compressBtn');
+
+            statusArea.classList.remove('hidden');
+            downloadLink.classList.add('hidden');
+            compressBtn.disabled = true;
+
+            try {
+                const numPages = pdfDocPdfjs.numPages;
+                const pdfDocLib = await PDFLib.PDFDocument.create();
+                
+                const scaleFactor = 0.6 + ((sliderVal - 60) / 40) * 0.4;
+                const jpegQuality = 0.5 + ((sliderVal - 60) / 40) * 0.5;
+
+                for (let i = 1; i <= numPages; i++) {
+                    const percent = Math.round((i / numPages) * 90);
+                    statusText.textContent = `Processing page ${i} of ${numPages} locally...`;
+                    progressBar.style.width = percent + '%';
+                    progressPercent.textContent = percent + '%';
+
+                    const page = await pdfDocPdfjs.getPage(i);
+                    const viewport = page.getViewport({ scale: scaleFactor });
+
+                    const canvas = document.createElement('canvas');
+                    const context = canvas.getContext('2d');
+                    canvas.height = viewport.height;
+                    canvas.width = viewport.width;
+
+                    await page.render({ canvasContext: context, viewport: viewport }).promise;
+
+                    const jpegUrl = canvas.toDataURL('image/jpeg', jpegQuality);
+                    const jpegImageBytes = await fetch(jpegUrl).then((res) => res.arrayBuffer());
+
+                    const embeddedImage = await pdfDocLib.embedJpg(jpegImageBytes);
+                    const newPage = pdfDocLib.addPage([viewport.width / scaleFactor, viewport.height / scaleFactor]);
+                    
+                    newPage.drawImage(embeddedImage, {
+                        x: 0,
+                        y: 0,
+                        width: newPage.getWidth(),
+                        height: newPage.getHeight(),
+                    });
+                }
+
+                statusText.textContent = 'Finalizing compressed PDF...';
+                progressBar.style.width = '95%';
+                progressPercent.textContent = '95%';
+
+                const compressedPdfBytes = await pdfDocLib.save();
+
+                const blob = new Blob([compressedPdfBytes], { type: 'application/pdf' });
+                const originalSizeStr = formatBytes(currentFile.size);
+                const compressedSizeStr = formatBytes(blob.size);
+
+                progressBar.style.width = '100%';
+                progressPercent.textContent = '100%';
+                statusText.innerHTML = `Done! Original: <strong class="text-slate-800 dark:text-white">${originalSizeStr}</strong> → Compressed: <strong class="text-emerald-600 dark:text-emerald-400">${compressedSizeStr}</strong>`;
+                
+                compressedBlobUrl = URL.createObjectURL(blob);
+                downloadLink.href = compressedBlobUrl;
+                downloadLink.download = `compressed_${currentFile.name}`;
+                downloadLink.classList.remove('hidden');
+
+                // Set Modal Sizes
+                document.getElementById('modalOriginalSize').textContent = originalSizeStr;
+                document.getElementById('modalFinalSize').textContent = compressedSizeStr;
+            } catch (error) {
+                console.error(error);
+                statusText.textContent = 'An error occurred. Make sure the PDF is not password protected.';
+                progressBar.style.width = '0%';
+                progressPercent.textContent = '0%';
+            } finally {
+                compressBtn.disabled = false;
+            }
+        }
+
+        function triggerDownloadSuccess() {
+            setTimeout(() => {
+                openSuccessModal();
+            }, 600);
+        }
+
+        function openSuccessModal() {
+            const modal = document.getElementById('successModal');
+            const content = document.getElementById('modalContent');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                content.classList.remove('scale-95', 'opacity-0');
+                content.classList.add('scale-100', 'opacity-100');
+            }, 10);
+        }
+
+        function closeSuccessModal() {
+            const modal = document.getElementById('successModal');
+            const content = document.getElementById('modalContent');
+            content.classList.remove('scale-100', 'opacity-100');
+            content.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 200);
+        }
+
+        function compressAnother() {
+            closeSuccessModal();
+            resetApp();
+        }
+
+        // Keyboard Shortcut: Esc to close modal
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeSuccessModal();
+            }
+        });
+    </script>
+</body>
+</html>
